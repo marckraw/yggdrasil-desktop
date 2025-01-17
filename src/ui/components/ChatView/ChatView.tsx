@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "../shadcn/ui/select";
 import { ArrowRightIcon } from "lucide-react";
+import { primeApiService } from "../../services/primeapi.service";
 
 export const chatFormSchema = z.object({
   message: z.string().min(2),
@@ -47,6 +48,17 @@ export const ChatView = () => {
 
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
     console.log("This is submission values", values);
+    const response = await primeApiService.chatAGI({
+      messages: [
+        {
+          role: "user",
+          content: values.message,
+        },
+      ],
+    });
+    console.log("This is response", response);
+    const data = await response.json();
+    console.log("This is data", data);
   };
 
   return (
