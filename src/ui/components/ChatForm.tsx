@@ -22,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { primeApiService } from "../services/primeapi.service";
+import { useStore } from "../hooks/useStore";
 
 export const chatFormSchema = z.object({
   message: z.string().min(2),
@@ -30,6 +31,7 @@ export const chatFormSchema = z.object({
 });
 
 export const ChatForm = () => {
+  const { setAIResponse } = useStore();
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
     defaultValues: {
@@ -59,6 +61,7 @@ export const ChatForm = () => {
     console.log("This is response", response);
     const data = await response.json();
     console.log("This is data", data);
+    setAIResponse(data);
   };
 
   return (
