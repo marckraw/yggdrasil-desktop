@@ -7,6 +7,7 @@ import { useStreamChat } from "../../hooks/useStreamChat";
 import { ConversationList } from "../modules/conversation/components/ConversationList";
 import { Button } from "../shadcn/ui/button";
 import { Menu } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export const ChatView = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,7 +40,6 @@ export const ChatView = () => {
           >
             <Menu className="h-4 w-4" />
           </Button>
-
           {/* Sliding Sidebar Panel */}
           <div
             className={`fixed top-0 left-0 h-full w-64 bg-background border-r p-4 transform transition-transform duration-300 ease-in-out z-40 
@@ -54,7 +54,6 @@ export const ChatView = () => {
 
             <ConversationList />
           </div>
-
           {/* Overlay */}
           {isSidebarOpen && (
             <div
