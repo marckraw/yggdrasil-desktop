@@ -23,6 +23,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { primeApiService } from "../services/primeapi.service";
 import { useStore } from "../hooks/useStore";
+import { useConversation } from "./modules/conversation/useConversation.hook";
+import { useStreamChat } from "../hooks/useStreamChat";
 
 export const chatFormSchema = z.object({
   message: z.string().min(2),
@@ -32,6 +34,20 @@ export const chatFormSchema = z.object({
 
 export const ChatForm = () => {
   const { setAIResponse } = useStore();
+  const {
+    activeConversation,
+    activeConversationId,
+    createConversation,
+    appendMessage,
+  } = useConversation();
+  const { content, isConnected, error, handleStream, cancelStream } =
+    useStreamChat({
+      appendMessage,
+      createConversation,
+      activeConversationId,
+      activeConversation,
+    });
+
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
     defaultValues: {
@@ -64,7 +80,12 @@ export const ChatForm = () => {
       console.log("This is data", data);
       setAIResponse(data);
     } else if (values.model === "gpt-4o") {
-      console.log("This is gpt-4o");
+      try {
+        await handleStream(values.message);
+        form.reset(); // Clear the form after successful submission
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      }
     }
   };
 
@@ -110,21 +131,17 @@ export const ChatForm = () => {
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Base models</SelectLabel>
-                          <SelectItem key={1} value={"gpt-4o"}>
-                            GPT-4o
-                          </SelectItem>
-                          <SelectItem key={2} value={"gpt-4o-mini"}>
+                          <SelectItem value={"gpt-4o"}>GPT-4o</SelectItem>
+                          <SelectItem value={"gpt-4o-mini"}>
                             GPT-4o-mini
                           </SelectItem>
-                          <SelectItem key={2} value={"claude-3-5-sonnet"}>
+                          <SelectItem value={"claude-3-5-sonnet"}>
                             Claude 3.5 Sonnet
                           </SelectItem>
                         </SelectGroup>
                         <SelectGroup>
                           <SelectLabel>Yggdrasil</SelectLabel>
-                          <SelectItem key={1} value="agi-1">
-                            AGI 1
-                          </SelectItem>
+                          <SelectItem value="agi-1">AGI 1</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -153,7 +170,15 @@ export const ChatForm = () => {
               />
             </div>
           </div>
-          <Button className={"absolute right-4 bottom-4"} disabled={false}>
+          <Button
+            type="submit"
+            className={`absolute right-4 bottom-4 ${
+              isConnected
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700"
+            }`}
+            disabled={false}
+          >
             <ArrowRightIcon className={"h-4 w-4"} />
           </Button>
         </div>

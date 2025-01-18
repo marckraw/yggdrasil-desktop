@@ -67,7 +67,7 @@ export const useStreamChat = ({
       ];
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/chat/stream`,
+        `${import.meta.env.VITE_BASE_API_URL}/api/chat/stream`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -79,7 +79,7 @@ export const useStreamChat = ({
           }),
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PRIME_AI_API_KEY}`,
+            Authorization: `Bearer ${import.meta.env.VITE_PRIME_AI_API_KEY}`,
           },
           signal: controller.signal,
         }

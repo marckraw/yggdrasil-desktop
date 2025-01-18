@@ -42,10 +42,36 @@ const createPrimeApiService = ({
     return response;
   };
 
+  const chatStream = async ({
+    messages,
+    model,
+    controller,
+  }: {
+    messages: any;
+    model: any;
+    controller: any;
+  }) => {
+    return fetch(`${baseUrl}/api/chat/stream`, {
+      method: "POST",
+      body: JSON.stringify({
+        model: {
+          company: "openai",
+          model: "gpt-4o",
+        },
+        messages,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      signal: controller.signal,
+    });
+  };
   // Exposed public interface
   return {
     testRequest,
     chatAGI,
+    chatStream,
   };
 };
 
