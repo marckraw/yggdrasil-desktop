@@ -33,20 +33,18 @@ export const chatFormSchema = z.object({
 });
 
 export const ChatForm = () => {
-  const { setAIResponse } = useStore();
   const {
     activeConversation,
     activeConversationId,
     createConversation,
     appendMessage,
   } = useConversation();
-  const { content, isConnected, error, handleStream, cancelStream } =
-    useStreamChat({
-      appendMessage,
-      createConversation,
-      activeConversationId,
-      activeConversation,
-    });
+  const { setContent, isConnected, handleStream } = useStreamChat({
+    appendMessage,
+    createConversation,
+    activeConversationId,
+    activeConversation,
+  });
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -78,7 +76,7 @@ export const ChatForm = () => {
       console.log("This is response", response);
       const data = await response.json();
       console.log("This is data", data);
-      setAIResponse(data);
+      setContent(data.response.data.messages[0].content);
     } else if (values.model === "gpt-4o") {
       try {
         await handleStream(values.message);

@@ -28,36 +28,41 @@ export const ChatView = () => {
 
   return (
     <div className="h-screen">
-      <div className="grid h-full grid-rows-[1fr_150px_auto]">
-        {/* Sidebar Toggle Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed left-4 top-4 z-50"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-
-        {/* Sliding Sidebar Panel */}
-        <div
-          className={`fixed top-0 left-0 h-full w-64 bg-background border-r p-4 transform transition-transform duration-300 ease-in-out z-40 
-            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
-        >
-          <Button className="w-full mb-4" onClick={() => createConversation()}>
-            New Conversation
+      <div className="grid h-full grid-rows-[80px_1fr_150px_auto]">
+        <div>
+          {/* Sidebar Toggle Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="fixed left-4 top-4 z-50"
+          >
+            <Menu className="h-4 w-4" />
           </Button>
 
-          <ConversationList />
-        </div>
-
-        {/* Overlay */}
-        {isSidebarOpen && (
+          {/* Sliding Sidebar Panel */}
           <div
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
+            className={`fixed top-0 left-0 h-full w-64 bg-background border-r p-4 transform transition-transform duration-300 ease-in-out z-40 
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+          >
+            <Button
+              className="w-full mb-4"
+              onClick={() => createConversation()}
+            >
+              New Conversation
+            </Button>
+
+            <ConversationList />
+          </div>
+
+          {/* Overlay */}
+          {isSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+        </div>
 
         <ChatResponse />
         <ChatForm />

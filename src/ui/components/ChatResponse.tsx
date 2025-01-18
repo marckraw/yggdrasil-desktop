@@ -10,19 +10,18 @@ export const ChatResponse = () => {
     createConversation,
     appendMessage,
   } = useConversation();
-  const { content, isConnected, error, handleStream, cancelStream } =
-    useStreamChat({
-      appendMessage,
-      createConversation,
-      activeConversationId,
-      activeConversation,
-    });
-  //   const { aiResponse } = useStore();
+  const { content, isConnected, error } = useStreamChat({
+    appendMessage,
+    createConversation,
+    activeConversationId,
+    activeConversation,
+  });
+
   return (
-    <div className="h-full p-4 custom-scrollbar">
+    <div className="h-full p-4 custom-scrollbar relative">
       {activeConversation ? (
         <>
-          <div className="mb-4 mt-4 flex justify-end">
+          <div className="mb-4 mt-4 flex justify-end fixed top-4 right-4 z-10">
             <div className="space-y-2">
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -31,7 +30,7 @@ export const ChatResponse = () => {
                     : "bg-red-100 text-red-800"
                 }`}
               >
-                {isConnected ? "Connected" : "Disconnected"}
+                {isConnected ? "Streaming" : "Disconnected"}
               </span>
 
               {error && (

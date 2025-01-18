@@ -1,7 +1,3 @@
-import { atom } from "jotai";
-
-const aiResponseAtom = atom("");
-
 /* 
     This is closure based service - functional replacement for class based service.
     Its using closure to create private variables and functions.
@@ -20,4 +16,4 @@ const createStoreService = () => {
 };
 
 const storeService = createStoreService();
-export { storeService, aiResponseAtom };
+export { storeService };

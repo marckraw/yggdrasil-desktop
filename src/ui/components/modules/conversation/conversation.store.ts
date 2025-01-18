@@ -16,6 +16,10 @@ const baseStorageAtom = atomWithStorage<ConversationStore>(
   initialState
 );
 
+export const contentAtom = atom("");
+export const aiResponseAtom = atom("");
+export const isConnectedAtom = atom(false);
+
 // Create a writable atom that combines storage with reducer
 export const conversationsAtom = atom(
   (get) => get(baseStorageAtom),

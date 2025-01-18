@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Message } from "../components/modules/conversation/conversation.types";
+import { useStore } from "./useStore";
 
 interface UseStreamChatProps {
   appendMessage: (message: Message, conversationId: string) => void;
@@ -13,6 +14,7 @@ interface StreamResponse {
   isConnected: boolean;
   error: string | null;
   handleStream: (message: string) => Promise<void>;
+  setContent: (content: string) => void;
   cancelStream: () => void;
 }
 
@@ -22,8 +24,7 @@ export const useStreamChat = ({
   activeConversationId,
   activeConversation,
 }: UseStreamChatProps): StreamResponse => {
-  const [content, setContent] = useState<string>("");
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const { setContent, setIsConnected, isConnected, content } = useStore();
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -52,7 +53,7 @@ export const useStreamChat = ({
     abortControllerRef.current = controller;
 
     try {
-      setIsConnected(false);
+      setIsConnected(true);
       setError(null);
       setContent("");
 
@@ -65,6 +66,8 @@ export const useStreamChat = ({
           timestamp: new Date().toISOString(),
         },
       ];
+
+      console.log("This is messages", messages);
 
       const response = await fetch(
         `${import.meta.env.VITE_BASE_API_URL}/api/chat/stream`,
@@ -85,6 +88,8 @@ export const useStreamChat = ({
         }
       );
 
+      console.log("This is response", response);
+
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -98,6 +103,8 @@ export const useStreamChat = ({
 
       while (true) {
         const { value, done } = await reader.read();
+
+        console.log("This is value", value);
 
         if (done) {
           if (currentConversationId) {
@@ -141,6 +148,7 @@ export const useStreamChat = ({
   };
 
   return {
+    setContent,
     content,
     isConnected,
     error,
