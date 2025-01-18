@@ -50,18 +50,22 @@ export const ChatForm = () => {
 
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
     console.log("This is submission values", values);
-    const response = await primeApiService.chatAGI({
-      messages: [
-        {
-          role: "user",
-          content: values.message,
-        },
-      ],
-    });
-    console.log("This is response", response);
-    const data = await response.json();
-    console.log("This is data", data);
-    setAIResponse(data);
+    if (values.model === "agi-1") {
+      const response = await primeApiService.chatAGI({
+        messages: [
+          {
+            role: "user",
+            content: values.message,
+          },
+        ],
+      });
+      console.log("This is response", response);
+      const data = await response.json();
+      console.log("This is data", data);
+      setAIResponse(data);
+    } else if (values.model === "gpt-4o") {
+      console.log("This is gpt-4o");
+    }
   };
 
   return (
@@ -93,6 +97,42 @@ export const ChatForm = () => {
             <div className="flex space-x-2">
               <FormField
                 control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={"gpt-4o"}
+                    >
+                      <SelectTrigger className="w-[200px] h-[32px]">
+                        <SelectValue placeholder="Select a model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Base models</SelectLabel>
+                          <SelectItem key={1} value={"gpt-4o"}>
+                            GPT-4o
+                          </SelectItem>
+                          <SelectItem key={2} value={"gpt-4o-mini"}>
+                            GPT-4o-mini
+                          </SelectItem>
+                          <SelectItem key={2} value={"claude-3-5-sonnet"}>
+                            Claude 3.5 Sonnet
+                          </SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Yggdrasil</SelectLabel>
+                          <SelectItem key={1} value="agi-1">
+                            AGI 1
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="imageGenModel"
                 render={({ field }) => (
                   <FormItem>
@@ -106,49 +146,6 @@ export const ChatForm = () => {
                         <SelectItem value={"none"}>none</SelectItem>
                         <SelectItem value="dalle-3">Dalle-3</SelectItem>
                         <SelectItem value="leonardo-ai">Leonardo AI</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={"gpt-4o"}
-                    >
-                      <SelectTrigger className="w-[200px] h-[32px]">
-                        <SelectValue placeholder="Select a model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Claude</SelectLabel>
-                          <SelectItem
-                            key={1}
-                            value={"claude-3-5-sonnet-20240620"}
-                          >
-                            Claude 3.5 Sonnet
-                          </SelectItem>
-                          <SelectItem
-                            key={2}
-                            value={"claude-3-5-sonnet-20240620-2"}
-                          >
-                            Claude 3.5 Sonnet 2
-                          </SelectItem>
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>Anton API</SelectLabel>
-                          <SelectItem key={1} value="anton-v1">
-                            Anton v1
-                          </SelectItem>
-                          <SelectItem key={2} value="anton-v2">
-                            Anton v2
-                          </SelectItem>
-                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   </FormItem>

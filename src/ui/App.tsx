@@ -6,8 +6,8 @@ export default function App() {
   useThemeListener();
 
   return (
-    <>
+    <div className="h-screen w-screen">
       <ChatView />
-    </>
+    </div>
   );
 }

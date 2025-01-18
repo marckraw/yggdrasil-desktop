@@ -1,0 +1,150 @@
+import { useState, useRef } from "react";
+import { Message } from "../components/modules/conversation/conversation.types";
+
+interface UseStreamChatProps {
+  appendMessage: (message: Message, conversationId: string) => void;
+  createConversation: () => string;
+  activeConversationId: string | null;
+  activeConversation: { messages: Message[] } | null;
+}
+
+interface StreamResponse {
+  content: string;
+  isConnected: boolean;
+  error: string | null;
+  handleStream: (message: string) => Promise<void>;
+  cancelStream: () => void;
+}
+
+export const useStreamChat = ({
+  appendMessage,
+  createConversation,
+  activeConversationId,
+  activeConversation,
+}: UseStreamChatProps): StreamResponse => {
+  const [content, setContent] = useState<string>("");
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const cancelStream = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsConnected(false);
+      setError("Stream cancelled by user");
+    }
+  };
+
+  const sanitizeMessages = (messages: Message[]) => {
+    return messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
+  };
+
+  const handleStream = async (message: string) => {
+    let currentConversationId = activeConversationId;
+    if (!currentConversationId) {
+      currentConversationId = createConversation();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      setIsConnected(false);
+      setError(null);
+      setContent("");
+
+      const conversationHistory = activeConversation?.messages || [];
+      const messages: Message[] = [
+        ...conversationHistory,
+        {
+          role: "user",
+          content: message,
+          timestamp: new Date().toISOString(),
+        },
+      ];
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/chat/stream`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            model: {
+              company: "openai",
+              model: "gpt-4o",
+            },
+            messages: sanitizeMessages(messages),
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PRIME_AI_API_KEY}`,
+          },
+          signal: controller.signal,
+        }
+      );
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Response body is null");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      setIsConnected(true);
+
+      while (true) {
+        const { value, done } = await reader.read();
+
+        if (done) {
+          if (currentConversationId) {
+            appendMessage(
+              {
+                role: "user",
+                content: message,
+              },
+              currentConversationId
+            );
+            appendMessage(
+              {
+                role: "assistant",
+                content: buffer,
+              },
+              currentConversationId
+            );
+          }
+
+          setIsConnected(false);
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        setContent(buffer);
+      }
+    } catch (err) {
+      console.log("Error happpppeeeened: ");
+      console.log(err);
+      if (err instanceof Error) {
+        if (err.name === "AbortError") {
+          setError("Stream cancelled");
+          return;
+        }
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+      setIsConnected(false);
+    }
+  };
+
+  return {
+    content,
+    isConnected,
+    error,
+    handleStream,
+    cancelStream,
+  };
+};
