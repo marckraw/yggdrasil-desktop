@@ -6,10 +6,12 @@ import {
   CommandList,
   CommandInput,
 } from "../shadcn/ui/command";
+import { useNavigate } from "@tanstack/react-router";
 
 import React from "react";
 
 export function CommandMenu() {
+  const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -29,9 +31,36 @@ export function CommandMenu() {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Suggestions">
-          <CommandItem>Calendar</CommandItem>
-          <CommandItem>Search Emoji</CommandItem>
-          <CommandItem>Calculator</CommandItem>
+          <CommandItem
+            onSelect={(currentValue) => {
+              setOpen(false);
+              navigate({
+                to: "/chat-page",
+              });
+            }}
+          >
+            Chat
+          </CommandItem>
+          <CommandItem
+            onSelect={(currentValue) => {
+              setOpen(false);
+              navigate({
+                to: "/about",
+              });
+            }}
+          >
+            About
+          </CommandItem>
+          <CommandItem
+            onSelect={(currentValue) => {
+              setOpen(false);
+              navigate({
+                to: "/",
+              });
+            }}
+          >
+            Index
+          </CommandItem>
         </CommandGroup>
       </CommandList>
     </CommandDialog>

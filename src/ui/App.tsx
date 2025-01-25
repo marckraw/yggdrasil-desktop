@@ -2,6 +2,7 @@ import React from "react";
 import { useThemeListener } from "./hooks/useTheme";
 import { Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { CommandMenu } from "./components/CommandMenu/CommandMenu";
 
 export default function App() {
   useThemeListener();
@@ -16,6 +17,7 @@ export default function App() {
       </Link> */}
       <Outlet />
       <TanStackRouterDevtools />
+      <CommandMenu />
     </div>
   );
 }
