@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Message } from "../components/modules/conversation/conversation.types";
 import { useStore } from "./useStore";
+import { decode } from "@tanstack/react-router";
 
 interface UseStreamChatProps {
   appendMessage: (message: Message, conversationId: string) => void;
@@ -104,7 +105,17 @@ export const useStreamChat = ({
       while (true) {
         const { value, done } = await reader.read();
 
-        console.log("This is value", value);
+        console.log(
+          "Another chunk of data",
+          decoder.decode(value, { stream: true })
+        );
+
+        const decodedChunk = decoder.decode(value, { stream: true });
+
+        if (!decodedChunk.includes("[DONE]")) {
+          buffer += decodedChunk;
+          setContent(buffer);
+        }
 
         if (done) {
           const duration = Date.now() - startTime;
@@ -129,9 +140,6 @@ export const useStreamChat = ({
           setIsConnected(false);
           break;
         }
-
-        buffer += decoder.decode(value, { stream: true });
-        setContent(buffer);
       }
     } catch (err) {
       console.log("Error happpppeeeened: ");
