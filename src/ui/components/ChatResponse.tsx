@@ -2,6 +2,7 @@ import React from "react";
 import { useConversation } from "./modules/conversation/useConversation.hook";
 import { useStreamChat } from "../hooks/useStreamChat";
 import { RenderMarkdown } from "./RenderMarkdown/RenderMarkdown";
+import { format, isToday, isYesterday } from "date-fns";
 
 export const ChatResponse = () => {
   const {
@@ -16,6 +17,19 @@ export const ChatResponse = () => {
     activeConversationId,
     activeConversation,
   });
+
+  const formatTimestamp = (timestamp: string | undefined) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+
+    if (isToday(date)) {
+      return format(date, "'Today at' h:mm a");
+    } else if (isYesterday(date)) {
+      return format(date, "'Yesterday at' h:mm a");
+    } else {
+      return format(date, "MMM d 'at' h:mm a");
+    }
+  };
 
   return (
     <div className="h-full p-4 custom-scrollbar relative">
@@ -43,8 +57,8 @@ export const ChatResponse = () => {
             {activeConversation?.messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
+                className={`flex flex-col ${
+                  message.role === "user" ? "items-end" : "items-start"
                 }`}
               >
                 <div
@@ -58,16 +72,26 @@ export const ChatResponse = () => {
                     <RenderMarkdown>{message.content}</RenderMarkdown>
                   </div>
                 </div>
+                <span
+                  className={`text-xs text-gray-500 mt-1 ${
+                    message.role === "user" ? "mr-3" : "ml-3"
+                  }`}
+                >
+                  {formatTimestamp(message.timestamp)}
+                </span>
               </div>
             ))}
 
             {isConnected && (
-              <div className="flex justify-start">
+              <div className="flex flex-col items-start">
                 <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 md:p-4 max-w-[90%] md:max-w-[80%] mr-2 md:mr-4">
                   <div className="prose dark:prose-invert max-w-none text-sm md:text-base">
                     <RenderMarkdown>{content}</RenderMarkdown>
                   </div>
                 </div>
+                <span className="text-xs text-gray-500 mt-1 ml-3">
+                  {formatTimestamp(new Date().toISOString())}
+                </span>
               </div>
             )}
           </div>
