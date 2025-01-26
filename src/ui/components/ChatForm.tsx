@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./shadcn/ui/select";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -33,6 +33,7 @@ export const chatFormSchema = z.object({
 });
 
 export const ChatForm = () => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const {
     activeConversation,
     activeConversationId,
@@ -56,49 +57,55 @@ export const ChatForm = () => {
   });
 
   const handleKeyDown: KeyboardEventHandler<HTMLFormElement> = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !isSubmitting) {
       e.preventDefault();
       form.handleSubmit(onSubmit)();
     }
   };
 
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
-    console.log("This is submission values", values);
-    if (values.model === "agi-1") {
-      const response = await primeApiService.chatAGI({
-        messages: [
-          {
-            role: "user",
-            content: values.message,
-          },
-        ],
-      });
-      const { data } = await response.json();
-      if (activeConversationId) {
-        appendMessage(
-          {
-            role: "user",
-            content: values.message,
-          },
-          activeConversationId
-        );
-        appendMessage(
-          {
-            role: "assistant",
-            content: data.messages[0].content,
-          },
-          activeConversationId
-        );
-      }
-    } else if (values.model === "gpt-4o") {
-      try {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      if (values.model === "agi-1") {
+        const response = await primeApiService.chatAGI({
+          messages: [
+            {
+              role: "user",
+              content: values.message,
+            },
+          ],
+        });
+        const { data } = await response.json();
+        if (activeConversationId) {
+          appendMessage(
+            {
+              role: "user",
+              content: values.message,
+            },
+            activeConversationId
+          );
+          appendMessage(
+            {
+              role: "assistant",
+              content: data.messages[0].content,
+            },
+            activeConversationId
+          );
+        }
+      } else if (values.model === "gpt-4o") {
         await handleStream(values.message);
-        form.reset(); // Clear the form after successful submission
-      } catch (error) {
-        console.error("Failed to send message:", error);
+        form.reset();
       }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isDisabled = isSubmitting || isConnected;
 
   return (
     <Form {...form}>
@@ -117,7 +124,7 @@ export const ChatForm = () => {
                   <Textarea
                     {...field}
                     placeholder="Ask whatever you want... (you can add for example #image-gen to help model to understand what you want to do)"
-                    disabled={false}
+                    disabled={isDisabled}
                     className={"pb-10 h-full"}
                   />
                 </FormControl>
@@ -135,6 +142,7 @@ export const ChatForm = () => {
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={"gpt-4o"}
+                      disabled={isDisabled}
                     >
                       <SelectTrigger className="w-[200px] h-[32px]">
                         <SelectValue placeholder="Select a model" />
@@ -164,7 +172,11 @@ export const ChatForm = () => {
                 name="imageGenModel"
                 render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={isDisabled}
+                    >
                       <FormControl>
                         <SelectTrigger className="w-[120px] h-[32px]">
                           <SelectValue placeholder="Image gen" />
@@ -183,14 +195,14 @@ export const ChatForm = () => {
           </div>
           <Button
             type="submit"
-            className={`absolute right-4 bottom-4 ${
-              isConnected
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700"
-            }`}
-            disabled={false}
+            className={`absolute right-4 bottom-4`}
+            disabled={isDisabled}
           >
-            <ArrowRightIcon className={"h-4 w-4"} />
+            {isSubmitting || isConnected ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowRightIcon className={"h-4 w-4"} />
+            )}
           </Button>
         </div>
       </form>
