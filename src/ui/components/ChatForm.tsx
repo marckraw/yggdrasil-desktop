@@ -25,6 +25,7 @@ import { primeApiService } from "../services/primeapi.service";
 import { useStore } from "../hooks/useStore";
 import { useConversation } from "./modules/conversation/useConversation.hook";
 import { useStreamChat } from "../hooks/useStreamChat";
+import { cn, getTagColor } from "../lib/utils";
 
 export const chatFormSchema = z.object({
   message: z.string().min(2),
@@ -143,6 +144,39 @@ export const ChatForm = () => {
 
   const isDisabled = isSubmitting || isConnected;
 
+  const modelOptions = [
+    {
+      label: "Base models",
+      items: [
+        {
+          value: "gpt-4o",
+          label: "GPT-4o",
+          tags: ["stream", "text", "vision"],
+        },
+        {
+          value: "gpt-4o-mini",
+          label: "GPT-4o-mini",
+          tags: ["stream", "text", "vision"],
+        },
+        {
+          value: "claude-3-5-sonnet",
+          label: "Claude 3.5 Sonnet",
+          tags: ["stream", "text", "code"],
+        },
+      ],
+    },
+    {
+      label: "Yggdrasil",
+      items: [
+        {
+          value: "agi-1",
+          label: "AGI 1",
+          tags: ["batch", "text", "image_gen"],
+        },
+      ],
+    },
+  ];
+
   return (
     <Form {...form}>
       <form
@@ -184,20 +218,32 @@ export const ChatForm = () => {
                         <SelectValue placeholder="Select a model" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Base models</SelectLabel>
-                          <SelectItem value={"gpt-4o"}>GPT-4o</SelectItem>
-                          <SelectItem value={"gpt-4o-mini"}>
-                            GPT-4o-mini
-                          </SelectItem>
-                          <SelectItem value={"claude-3-5-sonnet"}>
-                            Claude 3.5 Sonnet
-                          </SelectItem>
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>Yggdrasil</SelectLabel>
-                          <SelectItem value="agi-1">AGI 1</SelectItem>
-                        </SelectGroup>
+                        {modelOptions.map((group) => (
+                          <SelectGroup key={group.label}>
+                            <SelectLabel>{group.label}</SelectLabel>
+                            {group.items.map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                <div className="flex items-center justify-between w-full gap-4">
+                                  <span>{item.label}</span>
+                                  <div className="flex gap-2">
+                                    {item.tags.map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className={cn(
+                                          "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                                          getTagColor(tag).bg,
+                                          getTagColor(tag).text
+                                        )}
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
