@@ -1,3 +1,10 @@
+export interface GenerateImageRequestArgs {
+  prompt: string;
+  model: string;
+  debug: boolean;
+  rephrase?: boolean;
+}
+
 /* 
     This is closure based service - functional replacement for class based service.
     Its using closure to create private variables and functions.
@@ -42,6 +49,28 @@ const createPrimeApiService = ({
     return response;
   };
 
+  const generateImageRequest = async (args: GenerateImageRequestArgs) => {
+    const { prompt, model, debug, rephrase } = args;
+
+    const body = {
+      prompt,
+      model,
+      debug,
+      rephrase,
+    };
+
+    const response = await fetch(`${baseUrl}/api/images/generate`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    return response;
+  };
+
   const chatStream = async ({
     messages,
     model,
@@ -72,6 +101,7 @@ const createPrimeApiService = ({
     testRequest,
     chatAGI,
     chatStream,
+    generateImageRequest,
   };
 };
 

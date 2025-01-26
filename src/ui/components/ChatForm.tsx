@@ -30,7 +30,7 @@ import { cn, getTagColor } from "../lib/utils";
 export const chatFormSchema = z.object({
   message: z.string().min(2),
   model: z.any(),
-  imageGenModel: z.any(),
+  imageGenModel: z.enum(["none", "dall-e-3", "leonardo-ai"]),
 });
 
 export const ChatForm = () => {
@@ -56,7 +56,7 @@ export const ChatForm = () => {
     defaultValues: {
       message: "",
       model: "gpt-4o",
-      imageGenModel: "dalle-3",
+      imageGenModel: "none",
     },
   });
 
@@ -133,8 +133,47 @@ export const ChatForm = () => {
           );
         }
       } else if (values.model === "gpt-4o") {
-        await handleStream(values.message, startTime);
-        form.reset();
+        console.log("Submitted values");
+        console.log(values);
+
+        if (values.imageGenModel === "none") {
+          await handleStream(values.message, startTime);
+        } else if (values.imageGenModel === "dall-e-3") {
+          console.log("Geneerate image with dall-e-3");
+          const response = await primeApiService.generateImageRequest({
+            prompt: values.message,
+            model: "dall-e-3",
+            debug: true,
+            rephrase: true,
+          });
+          const { data } = await response.json();
+          const duration = Date.now() - startTime;
+
+          console.log("This is data maaaaaan");
+          console.log(data);
+
+          if (activeConversationId) {
+            appendMessage(
+              {
+                role: "user",
+                content: values.message,
+              },
+              activeConversationId
+            );
+            appendMessage(
+              {
+                role: "assistant",
+                content: data.messages[0].content,
+                duration,
+              },
+              activeConversationId
+            );
+          }
+        } else if (values.imageGenModel === "leonardo-ai") {
+          console.log("Geneerate image with leonardpai");
+        }
+
+        form.reset({ imageGenModel: values.imageGenModel, message: "" });
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -271,14 +310,14 @@ export const ChatForm = () => {
                         <SelectContent>
                           <SelectItem value="none">none</SelectItem>
                           <SelectItem
-                            value="dalle-3"
+                            value="dall-e-3"
                             disabled={selectedModel === "claude-3-5-sonnet"}
                             className={cn(
                               selectedModel === "claude-3-5-sonnet" &&
                                 "opacity-50"
                             )}
                           >
-                            Dalle-3
+                            dall-e-3
                           </SelectItem>
                           <SelectItem value="leonardo-ai">
                             Leonardo AI
