@@ -10,22 +10,6 @@ const isImageUrl = (str: string) => {
 };
 
 export const RenderMarkdown = ({ children }: { children: any }) => {
-  // If the content is just an image URL, render it directly as an image
-  if (typeof children === "string" && isImageUrl(children)) {
-    return (
-      <img
-        src={children}
-        alt="AI Generated"
-        className="max-w-full h-auto rounded-lg my-4"
-        loading="lazy"
-        onError={(e) => {
-          e.currentTarget.src = "fallback-image-url.png";
-          e.currentTarget.alt = "Image failed to load";
-        }}
-      />
-    );
-  }
-
   return (
     <ReactMarkdown
       components={{
@@ -46,20 +30,64 @@ export const RenderMarkdown = ({ children }: { children: any }) => {
             </code>
           );
         },
-        // Add image handling for markdown image syntax
+        // Handle both images and links
+        a({ node, href, children, ...props }: any) {
+          // Check if the href is an image URL
+          if (href && isImageUrl(href)) {
+            return (
+              <div className="relative group">
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <img
+                    src={href}
+                    alt="AI Generated"
+                    className="max-w-full h-auto rounded-lg my-4 cursor-zoom-in hover:opacity-90 transition-opacity"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = "fallback-image-url.png";
+                      e.currentTarget.alt = "Image failed to load";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg pointer-events-none" />
+                </a>
+              </div>
+            );
+          }
+          // Regular link handling
+          return (
+            <a href={href} {...props} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
+          );
+        },
+        // Handle direct image tags
         img({ node, src, alt, ...props }: any) {
           return (
-            <img
-              src={src}
-              alt={alt || "AI Generated"}
-              className="max-w-full h-auto rounded-lg my-4"
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.src = "fallback-image-url.png";
-                e.currentTarget.alt = "Image failed to load";
-              }}
-              {...props}
-            />
+            <div className="relative group">
+              <a
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <img
+                  src={src}
+                  alt={alt || "AI Generated"}
+                  className="max-w-full h-auto rounded-lg my-4 cursor-zoom-in hover:opacity-90 transition-opacity"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = "fallback-image-url.png";
+                    e.currentTarget.alt = "Image failed to load";
+                  }}
+                  {...props}
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg pointer-events-none" />
+              </a>
+            </div>
           );
         },
       }}

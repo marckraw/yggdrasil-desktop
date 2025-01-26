@@ -13,7 +13,7 @@ interface StreamResponse {
   content: string;
   isConnected: boolean;
   error: string | null;
-  handleStream: (message: string) => Promise<void>;
+  handleStream: (message: string, startTime: number) => Promise<void>;
   setContent: (content: string) => void;
   cancelStream: () => void;
 }
@@ -43,7 +43,7 @@ export const useStreamChat = ({
     }));
   };
 
-  const handleStream = async (message: string) => {
+  const handleStream = async (message: string, startTime: number) => {
     let currentConversationId = activeConversationId;
     if (!currentConversationId) {
       currentConversationId = createConversation();
@@ -107,6 +107,7 @@ export const useStreamChat = ({
         console.log("This is value", value);
 
         if (done) {
+          const duration = Date.now() - startTime;
           if (currentConversationId) {
             appendMessage(
               {
@@ -119,6 +120,7 @@ export const useStreamChat = ({
               {
                 role: "assistant",
                 content: buffer,
+                duration,
               },
               currentConversationId
             );

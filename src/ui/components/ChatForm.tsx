@@ -34,6 +34,9 @@ export const chatFormSchema = z.object({
 
 export const ChatForm = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [streamDuration, setStreamDuration] = React.useState<number>(0);
+  const streamStartTimeRef = React.useRef<number | null>(null);
+  const durationIntervalRef = React.useRef<number | null>(null);
   const {
     activeConversation,
     activeConversationId,
@@ -63,10 +66,39 @@ export const ChatForm = () => {
     }
   };
 
+  const startDurationCounter = () => {
+    streamStartTimeRef.current = Date.now();
+    durationIntervalRef.current = window.setInterval(() => {
+      if (streamStartTimeRef.current) {
+        setStreamDuration(Date.now() - streamStartTimeRef.current);
+      }
+    }, 100);
+  };
+
+  const stopDurationCounter = () => {
+    if (durationIntervalRef.current) {
+      clearInterval(durationIntervalRef.current);
+      durationIntervalRef.current = null;
+    }
+    streamStartTimeRef.current = null;
+    setStreamDuration(0);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
+    };
+  }, []);
+
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    const startTime = Date.now();
+    startDurationCounter();
+
     try {
       if (values.model === "agi-1") {
         const response = await primeApiService.chatAGI({
@@ -78,6 +110,8 @@ export const ChatForm = () => {
           ],
         });
         const { data } = await response.json();
+        const duration = Date.now() - startTime;
+
         if (activeConversationId) {
           appendMessage(
             {
@@ -90,17 +124,19 @@ export const ChatForm = () => {
             {
               role: "assistant",
               content: data.messages[0].content,
+              duration,
             },
             activeConversationId
           );
         }
       } else if (values.model === "gpt-4o") {
-        await handleStream(values.message);
+        await handleStream(values.message, startTime);
         form.reset();
       }
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
+      stopDurationCounter();
       setIsSubmitting(false);
     }
   };
@@ -195,13 +231,20 @@ export const ChatForm = () => {
           </div>
           <Button
             type="submit"
-            className={`absolute right-4 bottom-4`}
+            className="absolute right-4 bottom-4 min-w-[100px] flex items-center justify-center gap-2"
             disabled={isDisabled}
           >
             {isSubmitting || isConnected ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>
+                  {streamDuration > 0
+                    ? `${(streamDuration / 1000).toFixed(1)}s`
+                    : "Processing..."}
+                </span>
+              </>
             ) : (
-              <ArrowRightIcon className={"h-4 w-4"} />
+              <ArrowRightIcon className="h-4 w-4" />
             )}
           </Button>
         </div>

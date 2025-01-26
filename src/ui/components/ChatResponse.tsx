@@ -4,6 +4,11 @@ import { useStreamChat } from "../hooks/useStreamChat";
 import { RenderMarkdown } from "./RenderMarkdown/RenderMarkdown";
 import { format, isToday, isYesterday } from "date-fns";
 
+const formatDuration = (duration?: number) => {
+  if (!duration) return "";
+  return `${(duration / 1000).toFixed(2)}s`;
+};
+
 export const ChatResponse = () => {
   const {
     activeConversation,
@@ -72,13 +77,18 @@ export const ChatResponse = () => {
                     <RenderMarkdown>{message.content}</RenderMarkdown>
                   </div>
                 </div>
-                <span
+                <div
                   className={`text-xs text-gray-500 mt-1 ${
                     message.role === "user" ? "mr-3" : "ml-3"
                   }`}
                 >
-                  {formatTimestamp(message.timestamp)}
-                </span>
+                  <span>{formatTimestamp(message.timestamp)}</span>
+                  {message.duration && (
+                    <span className="ml-2">
+                      • {formatDuration(message.duration)}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
 
