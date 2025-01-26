@@ -163,7 +163,7 @@ export const ChatForm = () => {
         {
           value: "claude-3-5-sonnet",
           label: "Claude 3.5 Sonnet",
-          tags: ["stream", "text", "code"],
+          tags: ["stream", "text", "vision"],
         },
       ],
     },
@@ -173,7 +173,7 @@ export const ChatForm = () => {
         {
           value: "agi-1",
           label: "AGI 1",
-          tags: ["batch", "text", "image_gen"],
+          tags: ["thinks", "text", "image_gen"],
         },
       ],
     },

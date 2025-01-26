@@ -30,6 +30,23 @@ export const RenderMarkdown = ({ children }: { children: any }) => {
             </code>
           );
         },
+        // Modify the paragraph component to handle images
+        p: ({ children, ...props }) => {
+          // Check if the child is an image
+          const hasImg = React.Children.toArray(children).some(
+            (child: any) =>
+              child?.type === "img" ||
+              (child?.props?.href && isImageUrl(child?.props?.href))
+          );
+
+          // If contains image, render without p wrapper
+          if (hasImg) {
+            return <>{children}</>;
+          }
+
+          // Otherwise render normal paragraph
+          return <p {...props}>{children}</p>;
+        },
         // Handle both images and links
         a({ node, href, children, ...props }: any) {
           // Check if the href is an image URL
