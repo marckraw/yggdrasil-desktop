@@ -73,10 +73,23 @@ export const ChatForm = () => {
           },
         ],
       });
-      console.log("This is response", response);
-      const data = await response.json();
-      console.log("This is data", data);
-      setContent(data.response.data.messages[0].content);
+      const { data } = await response.json();
+      if (activeConversationId) {
+        appendMessage(
+          {
+            role: "user",
+            content: values.message,
+          },
+          activeConversationId
+        );
+        appendMessage(
+          {
+            role: "assistant",
+            content: data.messages[0].content,
+          },
+          activeConversationId
+        );
+      }
     } else if (values.model === "gpt-4o") {
       try {
         await handleStream(values.message);
