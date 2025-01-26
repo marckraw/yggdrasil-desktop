@@ -60,6 +60,8 @@ export const ChatForm = () => {
     },
   });
 
+  const selectedModel = form.watch("model");
+
   const handleKeyDown: KeyboardEventHandler<HTMLFormElement> = (e) => {
     if (e.key === "Enter" && !e.shiftKey && !isSubmitting) {
       e.preventDefault();
@@ -249,30 +251,44 @@ export const ChatForm = () => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="imageGenModel"
-                render={({ field }) => (
-                  <FormItem>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isDisabled}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-[120px] h-[32px]">
-                          <SelectValue placeholder="Image gen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={"none"}>none</SelectItem>
-                        <SelectItem value="dalle-3">Dalle-3</SelectItem>
-                        <SelectItem value="leonardo-ai">Leonardo AI</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
+
+              {selectedModel !== "agi-1" && (
+                <FormField
+                  control={form.control}
+                  name="imageGenModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={isDisabled}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-[120px] h-[32px]">
+                            <SelectValue placeholder="Image gen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">none</SelectItem>
+                          <SelectItem
+                            value="dalle-3"
+                            disabled={selectedModel === "claude-3-5-sonnet"}
+                            className={cn(
+                              selectedModel === "claude-3-5-sonnet" &&
+                                "opacity-50"
+                            )}
+                          >
+                            Dalle-3
+                          </SelectItem>
+                          <SelectItem value="leonardo-ai">
+                            Leonardo AI
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
           </div>
           <Button
