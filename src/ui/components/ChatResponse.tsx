@@ -67,12 +67,29 @@ export const ChatResponse = () => {
                 }`}
               >
                 <div
-                  className={`max-w-[90%] md:max-w-[80%] rounded-lg p-3 md:p-4 ${
+                  className={`max-w-[90%] md:max-w-[80%] rounded-lg p-3 md:p-4 relative group ${
                     message.role === "user"
                       ? "bg-blue-500 text-white ml-2 md:ml-4"
                       : "bg-gray-100 dark:bg-gray-800 mr-2 md:mr-4"
                   }`}
                 >
+                  {/* Hover card */}
+                  {message.role === "assistant" && (
+                    <div className="absolute bottom-full left-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white p-2 rounded text-sm pointer-events-none whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        <div>Role: {message.role}</div>
+                        <div>Duration: {formatDuration(message.duration)}</div>
+                        <div>
+                          Time:{" "}
+                          {format(
+                            new Date(message.timestamp || ""),
+                            "HH:mm:ss"
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="prose dark:prose-invert max-w-none text-sm md:text-base">
                     <RenderMarkdown>{message.content}</RenderMarkdown>
                   </div>
@@ -94,14 +111,18 @@ export const ChatResponse = () => {
 
             {isConnected && (
               <div className="flex flex-col items-start">
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 md:p-4 max-w-[90%] md:max-w-[80%] mr-2 md:mr-4">
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 md:p-4 max-w-[90%] md:max-w-[80%] mr-2 md:mr-4 relative group">
+                  <div className="absolute bottom-full left-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white p-2 rounded text-sm pointer-events-none whitespace-nowrap">
+                    <div className="flex flex-col gap-1">
+                      <div>Role: assistant (streaming)</div>
+                      <div>Status: Active stream</div>
+                      <div>Time: {format(new Date(), "HH:mm:ss")}</div>
+                    </div>
+                  </div>
                   <div className="prose dark:prose-invert max-w-none text-sm md:text-base">
                     <RenderMarkdown>{content}</RenderMarkdown>
                   </div>
                 </div>
-                <span className="text-xs text-gray-500 mt-1 ml-3">
-                  {formatTimestamp(new Date().toISOString())}
-                </span>
               </div>
             )}
           </div>
