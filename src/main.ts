@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from "electron";
 import path from "path";
 import started from "electron-squirrel-startup";
 
@@ -7,6 +7,16 @@ if (started) {
   app.quit();
 }
 
+// Register IPC handlers before creating the window
+ipcMain.handle("open-external-url", async (_event, url) => {
+  try {
+    await shell.openExternal(url);
+  } catch (error) {
+    console.error("Failed to open external URL:", error);
+    throw error;
+  }
+});
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -14,6 +24,9 @@ const createWindow = () => {
     height: 768,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: false,
     },
     title: "Yggdrasil Desktop",
     fullscreenable: false,
@@ -29,6 +42,19 @@ const createWindow = () => {
     );
   }
 
+  // Register global shortcut
+  globalShortcut.register("CommandOrControl+Shift+X", () => {
+    // Get selected text from clipboard
+    const selectedText = require("electron").clipboard.readText();
+
+    // Send the selected text to your renderer process
+    mainWindow.webContents.send("selected-text", selectedText);
+
+    // Bring window to front
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  });
+
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
@@ -37,6 +63,11 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", createWindow);
+
+// Unregister all shortcuts when app is about to quit
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -54,6 +85,3 @@ app.on("activate", () => {
     createWindow();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
