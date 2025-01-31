@@ -110,6 +110,9 @@ export const ChatForm = () => {
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
     console.log("These are values: ");
     console.log(values);
+    // TODO: make sure attachments are being send in proper way to ai, and understood by it.
+    // Will also require some work on api.prime.mrck.dev
+
     // if (isSubmitting) return;
 
     // setIsSubmitting(true);
