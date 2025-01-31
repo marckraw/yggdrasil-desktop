@@ -25,17 +25,20 @@ import { primeApiService } from "../services/primeapi.service";
 import { useConversation } from "./modules/conversation/useConversation.hook";
 import { useStreamChat } from "../hooks/useStreamChat";
 import { cn, getTagColor } from "../lib/utils";
+import { getFileType, isFileTypeSupported } from "../lib/file-utils";
+import { FileType } from "../../types/upload";
 
 export const chatFormSchema = z.object({
   message: z.string().min(2),
   model: z.any(),
   imageGenModel: z.enum(["none", "dall-e-3", "leonardo-ai"]),
-  images: z
+  attachments: z
     .array(
       z.object({
         id: z.string(),
         base64: z.string(),
         name: z.string(),
+        type: z.enum(["image", "pdf", "markdown"]),
       })
     )
     .default([]),
@@ -65,7 +68,7 @@ export const ChatForm = () => {
       message: "",
       model: "gpt-4o",
       imageGenModel: "none",
-      images: [],
+      attachments: [],
     },
   });
 
@@ -230,22 +233,32 @@ export const ChatForm = () => {
   ];
 
   const handleFilesDrop = async (files: File[]) => {
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const supportedFiles = files.filter(isFileTypeSupported);
 
-    for (const file of imageFiles) {
+    for (const file of supportedFiles) {
       try {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const base64Data = e.target?.result as string;
-          const currentImages = form.getValues("images") || [];
-          form.setValue("images", [
-            ...currentImages,
-            {
-              id: crypto.randomUUID(),
-              base64: base64Data,
-              name: file.name,
-            },
-          ]);
+          const fileType = getFileType(file);
+          const currentAttachments = form.getValues("attachments") || [];
+
+          if (fileType) {
+            form.setValue("attachments", [
+              ...currentAttachments,
+              {
+                id: crypto.randomUUID(),
+                base64: base64Data,
+                name: file.name,
+                type:
+                  fileType === FileType.IMAGE
+                    ? "image"
+                    : fileType === FileType.DOCUMENT
+                      ? "pdf"
+                      : "markdown",
+              },
+            ]);
+          }
         };
         reader.readAsDataURL(file);
       } catch (error) {
@@ -270,16 +283,16 @@ export const ChatForm = () => {
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder="Ask whatever you want... (you can add for example #image-gen to help model to understand what you want to do)"
+                    placeholder="Ask whatever you want..."
                     disabled={isDisabled}
                     className={"pb-10 h-full"}
                     onFilesDrop={handleFilesDrop}
-                    images={form.watch("images")}
-                    onRemoveImage={(id) => {
-                      const currentImages = form.getValues("images");
+                    attachments={form.watch("attachments")}
+                    onRemoveAttachment={(id) => {
+                      const currentAttachments = form.getValues("attachments");
                       form.setValue(
-                        "images",
-                        currentImages.filter((img) => img.id !== id)
+                        "attachments",
+                        currentAttachments.filter((att) => att.id !== id)
                       );
                     }}
                   />
