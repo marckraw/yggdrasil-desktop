@@ -30,6 +30,15 @@ export const chatFormSchema = z.object({
   message: z.string().min(2),
   model: z.any(),
   imageGenModel: z.enum(["none", "dall-e-3", "leonardo-ai"]),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        base64: z.string(),
+        name: z.string(),
+      })
+    )
+    .default([]),
 });
 
 export const ChatForm = () => {
@@ -56,6 +65,7 @@ export const ChatForm = () => {
       message: "",
       model: "gpt-4o",
       imageGenModel: "none",
+      images: [],
     },
   });
 
@@ -95,91 +105,93 @@ export const ChatForm = () => {
   }, []);
 
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
-    if (isSubmitting) return;
+    console.log("These are values: ");
+    console.log(values);
+    // if (isSubmitting) return;
 
-    setIsSubmitting(true);
-    const startTime = Date.now();
-    startDurationCounter();
+    // setIsSubmitting(true);
+    // const startTime = Date.now();
+    // startDurationCounter();
 
-    try {
-      if (values.model === "agi-1") {
-        const response = await primeApiService.chatAGI({
-          messages: [
-            {
-              role: "user",
-              content: values.message,
-            },
-          ],
-        });
-        const { data } = await response.json();
-        const duration = Date.now() - startTime;
+    // try {
+    //   if (values.model === "agi-1") {
+    //     const response = await primeApiService.chatAGI({
+    //       messages: [
+    //         {
+    //           role: "user",
+    //           content: values.message,
+    //         },
+    //       ],
+    //     });
+    //     const { data } = await response.json();
+    //     const duration = Date.now() - startTime;
 
-        if (activeConversationId) {
-          appendMessage(
-            {
-              role: "user",
-              content: values.message,
-            },
-            activeConversationId
-          );
-          appendMessage(
-            {
-              role: "assistant",
-              content: data.messages[0].content,
-              duration,
-            },
-            activeConversationId
-          );
-        }
-      } else if (values.model === "gpt-4o") {
-        console.log("Submitted values");
-        console.log(values);
+    //     if (activeConversationId) {
+    //       appendMessage(
+    //         {
+    //           role: "user",
+    //           content: values.message,
+    //         },
+    //         activeConversationId
+    //       );
+    //       appendMessage(
+    //         {
+    //           role: "assistant",
+    //           content: data.messages[0].content,
+    //           duration,
+    //         },
+    //         activeConversationId
+    //       );
+    //     }
+    //   } else if (values.model === "gpt-4o") {
+    //     console.log("Submitted values");
+    //     console.log(values);
 
-        if (values.imageGenModel === "none") {
-          await handleStream(values.message, startTime);
-        } else if (values.imageGenModel === "dall-e-3") {
-          console.log("Geneerate image with dall-e-3");
-          const response = await primeApiService.generateImageRequest({
-            prompt: values.message,
-            model: "dall-e-3",
-            debug: true,
-            rephrase: true,
-          });
-          const { data } = await response.json();
-          const duration = Date.now() - startTime;
+    //     if (values.imageGenModel === "none") {
+    //       await handleStream(values.message, startTime);
+    //     } else if (values.imageGenModel === "dall-e-3") {
+    //       console.log("Geneerate image with dall-e-3");
+    //       const response = await primeApiService.generateImageRequest({
+    //         prompt: values.message,
+    //         model: "dall-e-3",
+    //         debug: true,
+    //         rephrase: true,
+    //       });
+    //       const { data } = await response.json();
+    //       const duration = Date.now() - startTime;
 
-          console.log("This is data maaaaaan");
-          console.log(data);
+    //       console.log("This is data maaaaaan");
+    //       console.log(data);
 
-          if (activeConversationId) {
-            appendMessage(
-              {
-                role: "user",
-                content: values.message,
-              },
-              activeConversationId
-            );
-            appendMessage(
-              {
-                role: "assistant",
-                content: data.messages[0].content,
-                duration,
-              },
-              activeConversationId
-            );
-          }
-        } else if (values.imageGenModel === "leonardo-ai") {
-          console.log("Geneerate image with leonardpai");
-        }
+    //       if (activeConversationId) {
+    //         appendMessage(
+    //           {
+    //             role: "user",
+    //             content: values.message,
+    //           },
+    //           activeConversationId
+    //         );
+    //         appendMessage(
+    //           {
+    //             role: "assistant",
+    //             content: data.messages[0].content,
+    //             duration,
+    //           },
+    //           activeConversationId
+    //         );
+    //       }
+    //     } else if (values.imageGenModel === "leonardo-ai") {
+    //       console.log("Geneerate image with leonardpai");
+    //     }
 
-        form.reset({ imageGenModel: values.imageGenModel, message: "" });
-      }
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    } finally {
-      stopDurationCounter();
-      setIsSubmitting(false);
-    }
+    //     form.reset({ imageGenModel: values.imageGenModel, message: "" });
+    //   }
+    // } catch (error) {
+    //   console.error("Failed to send message:", error);
+    // } finally {
+    //   stopDurationCounter();
+    //   setIsSubmitting(false);
+    // }
   };
 
   const isDisabled = isSubmitting || isConnected;
@@ -225,13 +237,15 @@ export const ChatForm = () => {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const base64Data = e.target?.result as string;
-          // The preview is now handled by the Textarea component
-          // We just need to append the markdown to the message
-          const imageMarkdown = `![${file.name}](${base64Data})`;
-          form.setValue(
-            "message",
-            form.getValues("message") + "\n" + imageMarkdown
-          );
+          const currentImages = form.getValues("images") || [];
+          form.setValue("images", [
+            ...currentImages,
+            {
+              id: crypto.randomUUID(),
+              base64: base64Data,
+              name: file.name,
+            },
+          ]);
         };
         reader.readAsDataURL(file);
       } catch (error) {
@@ -260,6 +274,14 @@ export const ChatForm = () => {
                     disabled={isDisabled}
                     className={"pb-10 h-full"}
                     onFilesDrop={handleFilesDrop}
+                    images={form.watch("images")}
+                    onRemoveImage={(id) => {
+                      const currentImages = form.getValues("images");
+                      form.setValue(
+                        "images",
+                        currentImages.filter((img) => img.id !== id)
+                      );
+                    }}
                   />
                 </FormControl>
                 <FormMessage className={"absolute left-4 bottom-4"} />

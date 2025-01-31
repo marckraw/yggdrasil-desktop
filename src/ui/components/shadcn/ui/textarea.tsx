@@ -12,10 +12,11 @@ const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentPropsWithoutRef<"textarea"> & {
     onFilesDrop?: (files: File[]) => void;
+    images?: ImagePreview[];
+    onRemoveImage?: (id: string) => void;
   }
->(({ className, onFilesDrop, ...props }, ref) => {
+>(({ className, onFilesDrop, images = [], onRemoveImage, ...props }, ref) => {
   const [isDragging, setIsDragging] = React.useState(false);
-  const [previews, setPreviews] = React.useState<ImagePreview[]>([]);
   const dragCounter = React.useRef(0);
 
   const handleDragOver = React.useCallback(
@@ -80,11 +81,6 @@ const Textarea = React.forwardRef<
       if (files.length === 0) return;
 
       const newPreviews = await Promise.all(files.map(processFile));
-      setPreviews((prev) => [
-        ...prev,
-        ...(newPreviews.filter(Boolean) as ImagePreview[]),
-      ]);
-
       if (onFilesDrop) {
         onFilesDrop(files);
       }
@@ -103,28 +99,12 @@ const Textarea = React.forwardRef<
       if (files.length === 0) return;
 
       const newPreviews = await Promise.all(files.map(processFile));
-      setPreviews((prev) => [
-        ...prev,
-        ...(newPreviews.filter(Boolean) as ImagePreview[]),
-      ]);
-
       if (onFilesDrop) {
         onFilesDrop(files);
       }
     },
     [onFilesDrop, processFile]
   );
-
-  const removePreview = React.useCallback((id: string) => {
-    setPreviews((prev) => prev.filter((p) => p.id !== id));
-  }, []);
-
-  React.useEffect(() => {
-    return () => {
-      // Cleanup any remaining previews on unmount
-      setPreviews([]);
-    };
-  }, []);
 
   return (
     <div className="relative w-full h-full">
@@ -149,25 +129,30 @@ const Textarea = React.forwardRef<
         )}
         {...props}
       />
-      {previews.length > 0 && (
-        <div className="absolute top-2 right-2 flex flex-wrap gap-2 max-w-[200px]">
-          {previews.map((preview) => (
-            <div key={preview.id} className="relative group">
+      {images.length > 0 && (
+        <div className="absolute top-2 right-2 flex flex-wrap gap-1 w-[120px]">
+          {images.slice(0, 4).map((preview) => (
+            <div key={preview.id} className="relative group w-[55px] h-[55px]">
               <img
                 src={preview.base64}
                 alt={preview.name}
-                className="w-[180px] h-[180px] object-cover rounded-md border border-border"
+                className="w-full h-full object-cover rounded-md border border-border"
                 loading="lazy"
               />
               <button
-                onClick={() => removePreview(preview.id)}
-                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onRemoveImage?.(preview.id)}
+                className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                 type="button"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
             </div>
           ))}
+          {images.length > 4 && (
+            <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full text-xs px-1.5">
+              +{images.length - 4}
+            </div>
+          )}
         </div>
       )}
     </div>
