@@ -22,7 +22,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { primeApiService } from "../services/primeapi.service";
-import { useStore } from "../hooks/useStore";
 import { useConversation } from "./modules/conversation/useConversation.hook";
 import { useStreamChat } from "../hooks/useStreamChat";
 import { cn, getTagColor } from "../lib/utils";
@@ -218,6 +217,29 @@ export const ChatForm = () => {
     },
   ];
 
+  const handleFilesDrop = async (files: File[]) => {
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    for (const file of imageFiles) {
+      try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64Data = e.target?.result as string;
+          // The preview is now handled by the Textarea component
+          // We just need to append the markdown to the message
+          const imageMarkdown = `![${file.name}](${base64Data})`;
+          form.setValue(
+            "message",
+            form.getValues("message") + "\n" + imageMarkdown
+          );
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error("Error processing dropped file:", error);
+      }
+    }
+  };
+
   return (
     <Form {...form}>
       <form
@@ -237,6 +259,7 @@ export const ChatForm = () => {
                     placeholder="Ask whatever you want... (you can add for example #image-gen to help model to understand what you want to do)"
                     disabled={isDisabled}
                     className={"pb-10 h-full"}
+                    onFilesDrop={handleFilesDrop}
                   />
                 </FormControl>
                 <FormMessage className={"absolute left-4 bottom-4"} />
