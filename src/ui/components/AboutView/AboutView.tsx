@@ -23,7 +23,9 @@ export const AboutView = () => {
 
         <div className="flex gap-4 mt-8">
           <Button
-            onClick={() => handleOpenUrl("http://www.google.pl")}
+            onClick={() =>
+              handleOpenUrl("https://github.com/marckraw/yggdrasil-desktop")
+            }
             variant="outline"
           >
             <Github className="mr-2" />
