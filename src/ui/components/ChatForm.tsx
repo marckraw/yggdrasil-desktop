@@ -27,6 +27,7 @@ import { useStreamChat } from "../hooks/useStreamChat";
 import { cn, getTagColor } from "../lib/utils";
 import { getFileType, isFileTypeSupported } from "../lib/file-utils";
 import { FileType } from "../../types/upload";
+import { backpackComponentsService } from "../services/backpackComponents.service";
 
 export const chatFormSchema = z.object({
   message: z.string().min(2),
@@ -108,93 +109,117 @@ export const ChatForm = () => {
   }, []);
 
   const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
-    console.log("These are values: ");
-    console.log(values);
-    // if (isSubmitting) return;
+    // TODO: make sure attachments are being send in proper way to ai, and understood by it.
+    // Will also require some work on api.prime.mrck.dev
 
-    // setIsSubmitting(true);
-    // const startTime = Date.now();
-    // startDurationCounter();
+    if (isSubmitting) return;
 
-    // try {
-    //   if (values.model === "agi-1") {
-    //     const response = await primeApiService.chatAGI({
-    //       messages: [
-    //         {
-    //           role: "user",
-    //           content: values.message,
-    //         },
-    //       ],
-    //     });
-    //     const { data } = await response.json();
-    //     const duration = Date.now() - startTime;
+    setIsSubmitting(true);
+    const startTime = Date.now();
+    startDurationCounter();
 
-    //     if (activeConversationId) {
-    //       appendMessage(
-    //         {
-    //           role: "user",
-    //           content: values.message,
-    //         },
-    //         activeConversationId
-    //       );
-    //       appendMessage(
-    //         {
-    //           role: "assistant",
-    //           content: data.messages[0].content,
-    //           duration,
-    //         },
-    //         activeConversationId
-    //       );
-    //     }
-    //   } else if (values.model === "gpt-4o") {
-    //     console.log("Submitted values");
-    //     console.log(values);
+    try {
+      console.log("These are values: ");
+      console.log(values);
+      if (values.model === "backpack-components") {
+        console.log("Backpack components");
+        const { data } = await backpackComponentsService.run(values);
+        const duration = Date.now() - startTime;
+        if (activeConversationId) {
+          appendMessage(
+            {
+              role: "user",
+              content: values.message,
+            },
+            activeConversationId
+          );
+          appendMessage(
+            {
+              role: "assistant",
+              content: data.messages[0].content,
+              duration,
+            },
+            activeConversationId
+          );
+        }
+      } else if (values.model === "agi-1") {
+        const response = await primeApiService.chatAGI({
+          messages: [
+            {
+              role: "user",
+              content: values.message,
+            },
+          ],
+        });
+        const { data } = await response.json();
+        const duration = Date.now() - startTime;
 
-    //     if (values.imageGenModel === "none") {
-    //       await handleStream(values.message, startTime);
-    //     } else if (values.imageGenModel === "dall-e-3") {
-    //       console.log("Geneerate image with dall-e-3");
-    //       const response = await primeApiService.generateImageRequest({
-    //         prompt: values.message,
-    //         model: "dall-e-3",
-    //         debug: true,
-    //         rephrase: true,
-    //       });
-    //       const { data } = await response.json();
-    //       const duration = Date.now() - startTime;
+        if (activeConversationId) {
+          appendMessage(
+            {
+              role: "user",
+              content: values.message,
+            },
+            activeConversationId
+          );
+          appendMessage(
+            {
+              role: "assistant",
+              content: data.messages[0].content,
+              duration,
+            },
+            activeConversationId
+          );
+        }
+      } else if (values.model === "gpt-4o") {
+        console.log("Submitted values");
+        console.log(values);
 
-    //       console.log("This is data maaaaaan");
-    //       console.log(data);
+        if (values.imageGenModel === "none") {
+          await handleStream(values.message, startTime);
+        } else if (values.imageGenModel === "dall-e-3") {
+          console.log("Geneerate image with dall-e-3");
+          const response = await primeApiService.generateImageRequest({
+            prompt: values.message,
+            model: "dall-e-3",
+            debug: true,
+            rephrase: true,
+          });
+          const { data } = await response.json();
+          const duration = Date.now() - startTime;
 
-    //       if (activeConversationId) {
-    //         appendMessage(
-    //           {
-    //             role: "user",
-    //             content: values.message,
-    //           },
-    //           activeConversationId
-    //         );
-    //         appendMessage(
-    //           {
-    //             role: "assistant",
-    //             content: data.messages[0].content,
-    //             duration,
-    //           },
-    //           activeConversationId
-    //         );
-    //       }
-    //     } else if (values.imageGenModel === "leonardo-ai") {
-    //       console.log("Geneerate image with leonardpai");
-    //     }
+          console.log("This is data maaaaaan");
+          console.log(data);
 
-    //     form.reset({ imageGenModel: values.imageGenModel, message: "" });
-    //   }
-    // } catch (error) {
-    //   console.error("Failed to send message:", error);
-    // } finally {
-    //   stopDurationCounter();
-    //   setIsSubmitting(false);
-    // }
+          if (activeConversationId) {
+            appendMessage(
+              {
+                role: "user",
+                content: values.message,
+              },
+              activeConversationId
+            );
+            appendMessage(
+              {
+                role: "assistant",
+                content: data.messages[0].content,
+                duration,
+              },
+              activeConversationId
+            );
+          }
+        } else if (values.imageGenModel === "leonardo-ai") {
+          console.log("Geneerate image with leonardpai");
+        }
+
+        form.reset({ imageGenModel: values.imageGenModel, message: "" });
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    } finally {
+      stopDurationCounter();
+      setIsSubmitting(false);
+    }
   };
 
   const isDisabled = isSubmitting || isConnected;
@@ -227,6 +252,11 @@ export const ChatForm = () => {
           value: "agi-1",
           label: "AGI 1",
           tags: ["thinks", "text", "image_gen"],
+        },
+        {
+          value: "backpack-components",
+          label: "Backpack components",
+          tags: ["text"],
         },
       ],
     },

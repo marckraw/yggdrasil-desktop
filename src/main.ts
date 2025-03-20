@@ -29,8 +29,10 @@ const createWindow = () => {
       sandbox: false,
     },
     title: "Yggdrasil Desktop",
-    fullscreenable: false,
-    resizable: false,
+    fullscreenable: true,
+    resizable: true,
+    minWidth: 800,
+    minHeight: 600,
   });
 
   // and load the index.html of the app.

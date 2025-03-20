@@ -1,6 +1,6 @@
 import React from "react";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { ChatView } from "../ui/components/ChatView/ChatView";
+import { DashboardView } from "../ui/components/DashboardView/DashboardView";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -9,7 +9,7 @@ export const Route = createLazyFileRoute("/")({
 function Index() {
   return (
     <>
-      <ChatView />
+      <DashboardView />
     </>
   );
 }
