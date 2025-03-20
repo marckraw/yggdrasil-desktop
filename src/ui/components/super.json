@@ -1,0 +1,21 @@
+{
+    "component": "sb-accordion",
+    "type": "multiple",
+    "items": [
+        {
+            "component": "sb-accordion-item",
+            "title": [
+                {
+                    "component": "sb-text",
+                    "content": "Greatness"
+                }
+            ],
+            "content": [
+                {
+                    "component": "sb-text",
+                    "content": "I'm super great."
+                }
+            ]
+        }
+    ]
+}

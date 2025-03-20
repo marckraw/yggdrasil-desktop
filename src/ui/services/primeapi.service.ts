@@ -24,6 +24,34 @@ const createPrimeApiService = ({
     return apiKey;
   };
 
+  const singleShotRequest = async ({ messages }: { messages: any }) => {
+    console.log("This is messages", messages);
+    console.log("This is base url", baseUrl);
+    console.log("This is api key", apiKey);
+
+    const body = {
+      model: {
+        company: "openai",
+        model: "gpt-4o-mini",
+      },
+      systemMessage: messages[0].content,
+      messages: messages.slice(1),
+    };
+
+    console.log("Body to send: ");
+    console.log(body);
+
+    const response = await fetch(`${baseUrl}/api/ai/chat`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+    return response;
+  };
+
   const chatAGI = async ({ messages }: { messages: any }) => {
     console.log("This is messages", messages);
     console.log("This is base url", baseUrl);
@@ -99,6 +127,7 @@ const createPrimeApiService = ({
   // Exposed public interface
   return {
     testRequest,
+    singleShotRequest,
     chatAGI,
     chatStream,
     generateImageRequest,
